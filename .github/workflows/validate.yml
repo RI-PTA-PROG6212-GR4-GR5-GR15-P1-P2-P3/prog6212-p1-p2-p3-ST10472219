@@ -26,7 +26,7 @@ jobs:
 
       - name: Check required API Endpoint Plan
         run: |
-          test -f docs/RaceDay_API_Endpoint_Plan.pdf
+          test -f docs/RaceDay_API_Endpoint_Plan.docx
 
       - name: Check required SQL script
         run: |
