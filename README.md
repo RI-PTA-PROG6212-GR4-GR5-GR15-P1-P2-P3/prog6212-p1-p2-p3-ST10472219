@@ -58,3 +58,9 @@ The workflow checks that the `docs` folder exists and contains the required ERD,
 ### Successful CI Build
 
 ![Successful CI Build](docs/CI-Green-Build.png)
+
+## Database
+
+The RaceDay database is implemented using Microsoft SQL Server.
+
+The database schema includes relationships between organisers, events, categories, participants, enrolments and results. Sample data is included in the SQL script for testing purposes.
