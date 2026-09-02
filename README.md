@@ -48,6 +48,17 @@ The database contains six entities:
 - Result
 
 The SQL script creates the database, tables, primary keys, foreign keys, constraints and sample data.
+## System Relationships
+
+The RaceDay system uses the following main relationships:
+
+- One Organiser can organise many Events.
+- One Event can have many Categories.
+- One Participant can have many Enrolments.
+- One Category can have many Enrolments.
+- One Enrolment can have zero or one Result.
+
+These relationships are represented in the RaceDay ERD and implemented using primary and foreign keys in the SQL database.
 
 ## GitHub Actions / CI
 
