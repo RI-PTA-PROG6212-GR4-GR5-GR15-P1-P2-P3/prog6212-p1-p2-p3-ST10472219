@@ -48,6 +48,11 @@ The database contains six entities:
 - Result
 
 The SQL script creates the database, tables, primary keys, foreign keys, constraints and sample data.
+
+## Database Constraints
+
+The database uses primary keys, foreign keys, NOT NULL constraints, UNIQUE constraints, DEFAULT values and CHECK constraints to maintain data integrity.
+
 ## System Relationships
 
 The RaceDay system uses the following main relationships:
