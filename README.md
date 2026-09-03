@@ -67,6 +67,10 @@ The RaceDay system uses the following main relationships:
 
 The SQL script includes sample organisers, participants, events, event categories, enrolments and results for testing the RaceDay database.
 
+## Database Technology
+
+The RaceDay database is designed for Microsoft SQL Server and the SQL script can be executed using SQL Server Management Studio (SSMS).
+
 These relationships are represented in the RaceDay ERD and implemented using primary and foreign keys in the SQL database.
 
 ## GitHub Actions / CI
