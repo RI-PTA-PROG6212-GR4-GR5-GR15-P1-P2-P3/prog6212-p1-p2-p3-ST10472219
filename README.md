@@ -1,410 +1,260 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/mr-hqvA6)
+# RaceDay System
 
-RaceDay System - Complete Database Schema
-Part 1 – Database, ERD, API Planning and CI/CD Documentation
-Overview
-The RaceDay System is an event management system designed for running, walking and cycling events in South Africa. The database supports event organisers, participants, event categories, enrolments and race results.
-•	Organiser management
-•	Participant management
-•	Event creation and management
-•	Event category management
-•	Participant enrolments
-•	Race results and performance tracking
-•	Role-based access through Organiser and Participant roles
-Technology Stack
-Component	Technology
-Database	Microsoft SQL Server
-Management Tool	SQL Server Management Studio (SSMS)
-Language	T-SQL
-Version Control	GitHub
-CI/CD	GitHub Actions
-ERD Tool	Mermaid Live Editor
-Documentation	Microsoft Word / Markdown
-Database Schema
-Core Entities (6 Tables)
-#	Entity	Description
-1	ORGANISER	Stores event organiser information
-2	PARTICIPANT	Stores participant information
-3	EVENT	Stores running, walking and cycling events
-4	CATEGORY	Stores categories available for each event
-5	ENROLMENT	Stores participant enrolments in event categories
-6	RESULT	Stores race results for participant enrolments
-Entity Relationship Diagram (ERD)
-The ERD shows the relationships between the six entities used by the RaceDay system.
- 
-Figure 1: RaceDay Entity Relationship Diagram
-Relationship	Cardinality	Description
-Organiser → Event	1 : Many	One Organiser can organise many Events.
-Event → Category	1 : Many	One Event can have many Categories.
-Participant → Enrolment	1 : Many	One Participant can have many Enrolments.
-Category → Enrolment	1 : Many	One Category can have many Enrolments.
-Enrolment → Result	1 : 0..1	An Enrolment can have zero or one Result.
-Installation Guide
-IMPORTANT: Follow These Instructions in Order
-1.	Open SQL Server Management Studio (SSMS).
-2.	Connect to a SQL Server instance.
-3.	Open RaceDay_Database.sql.
-4.	Run the complete SQL script.
-5.	The script creates the RaceDayDB database.
-6.	The script creates all six tables in dependency order.
-7.	Primary keys, foreign keys and other constraints are created.
-8.	Sample data is inserted into the database.
-9.	Use the verification queries to confirm the database is working.
-Important: The script drops an existing RaceDayDB database before recreating it. Do not run it against a database containing important data.
-Recommended Table Creation Order
-Order	Table	Dependency
-1	Organiser	Independent parent table
-2	Participant	Independent parent table
-3	Event	References Organiser
-4	Category	References Event
-5	Enrolment	References Participant and Category
-6	Result	References Enrolment
-Database Creation and Table Schema
-Main database schema
-IF DB_ID('RaceDayDB') IS NOT NULL
-BEGIN
-    ALTER DATABASE RaceDayDB SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-    DROP DATABASE RaceDayDB;
-END
-GO
+## Part 1 – System Planning, Database Design, API Planning and CI/CD
 
-CREATE DATABASE RaceDayDB;
-GO
+---
 
-USE RaceDayDB;
-GO
+## 1. Project Description
 
-CREATE TABLE Organiser (
-    OrganiserID INT IDENTITY(1,1) PRIMARY KEY,
-    FullName NVARCHAR(100) NOT NULL,
-    Email NVARCHAR(150) NOT NULL UNIQUE,
-    PasswordHash NVARCHAR(256) NOT NULL,
-    PhoneNumber NVARCHAR(20) NULL,
-    CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE()
-);
-GO
+RaceDay is a full-stack web-based event management system designed for the South African running, walking and cycling community.
 
-CREATE TABLE Participant (
-    ParticipantID INT IDENTITY(1,1) PRIMARY KEY,
-    FullName NVARCHAR(100) NOT NULL,
-    Email NVARCHAR(150) NOT NULL UNIQUE,
-    PasswordHash NVARCHAR(256) NOT NULL,
-    PhoneNumber NVARCHAR(20) NULL,
-    DateOfBirth DATE NULL,
-    CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE()
-);
-GO
+The purpose of the system is to provide a central platform where Event Organisers can create and manage sporting events, while Participants can browse events, select categories, enrol for events and view their race results.
 
-CREATE TABLE Event (
-    EventID INT IDENTITY(1,1) PRIMARY KEY,
-    OrganiserID INT NOT NULL,
-    EventName NVARCHAR(150) NOT NULL,
-    EventDate DATETIME2 NOT NULL,
-    Location NVARCHAR(200) NOT NULL,
-    Description NVARCHAR(1000) NULL,
-    EventType NVARCHAR(20) NOT NULL DEFAULT 'Running',
-    Status NVARCHAR(20) NOT NULL DEFAULT 'Scheduled',
-    CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
-    CONSTRAINT FK_Event_Organiser FOREIGN KEY (OrganiserID)
-        REFERENCES Organiser(OrganiserID),
-    CONSTRAINT CK_Event_Type CHECK
-        (EventType IN ('Running','Cycling','Walking')),
-    CONSTRAINT CK_Event_Status CHECK
-        (Status IN ('Scheduled','Cancelled','Completed'))
-);
-GO
+The system is designed around two main user roles:
 
-CREATE TABLE Category (
-    CategoryID INT IDENTITY(1,1) PRIMARY KEY,
-    EventID INT NOT NULL,
-    CategoryName NVARCHAR(100) NOT NULL,
-    DistanceKm DECIMAL(6,2) NOT NULL,
-    EntryFee DECIMAL(8,2) NOT NULL DEFAULT 0,
-    MaxParticipants INT NOT NULL DEFAULT 100,
-    CONSTRAINT FK_Category_Event FOREIGN KEY (EventID)
-        REFERENCES Event(EventID) ON DELETE CASCADE,
-    CONSTRAINT CK_Category_Distance CHECK (DistanceKm > 0),
-    CONSTRAINT CK_Category_MaxParticipants CHECK (MaxParticipants > 0)
-);
-GO
+- Organiser
+- Participant
 
-CREATE TABLE Enrolment (
-    EnrolmentID INT IDENTITY(1,1) PRIMARY KEY,
-    ParticipantID INT NOT NULL,
-    CategoryID INT NOT NULL,
-    EnrolmentDate DATETIME2 NOT NULL DEFAULT GETDATE(),
-    BibNumber NVARCHAR(10) NOT NULL UNIQUE,
-    Status NVARCHAR(20) NOT NULL DEFAULT 'Confirmed',
-    CONSTRAINT FK_Enrolment_Participant FOREIGN KEY (ParticipantID)
-        REFERENCES Participant(ParticipantID),
-    CONSTRAINT FK_Enrolment_Category FOREIGN KEY (CategoryID)
-        REFERENCES Category(CategoryID),
-    CONSTRAINT CK_Enrolment_Status CHECK
-        (Status IN ('Pending','Confirmed','Cancelled')),
-    CONSTRAINT UQ_Enrolment_Participant_Category
-        UNIQUE (ParticipantID, CategoryID)
-);
-GO
+The database was designed to support the main activities of the RaceDay system while maintaining data integrity through primary keys, foreign keys, unique constraints, default values and check constraints.
 
-CREATE TABLE Result (
-    ResultID INT IDENTITY(1,1) PRIMARY KEY,
-    EnrolmentID INT NOT NULL UNIQUE,
-    FinishTime TIME NULL,
-    Position INT NULL,
-    Status NVARCHAR(20) NOT NULL DEFAULT 'Finished',
-    CapturedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
-    CONSTRAINT FK_Result_Enrolment FOREIGN KEY (EnrolmentID)
-        REFERENCES Enrolment(EnrolmentID) ON DELETE CASCADE,
-    CONSTRAINT CK_Result_Status CHECK
-        (Status IN ('Finished','DNF','DSQ'))
-);
-GO
-Seed Data
-Data Type	Quantity
-Organisers	2
-Participants	2
-Events	3
-Event Categories	5
-Sample Enrolments	4
-Sample Results	2
-Sample data
--- Organisers
-INSERT INTO Organiser (FullName, Email, PasswordHash, PhoneNumber) VALUES
-('Thabo Mokoena', 'thabo.mokoena@raceday.co.za',
- 'HASHED_PASSWORD_1', '0821234567'),
-('Lindiwe Nkosi', 'lindiwe.nkosi@raceday.co.za',
- 'HASHED_PASSWORD_2', '0839876543');
-GO
+---
 
--- Participants
-INSERT INTO Participant
-(FullName, Email, PasswordHash, PhoneNumber, DateOfBirth) VALUES
-('Sipho Dlamini', 'sipho.dlamini@gmail.com',
- 'HASHED_PASSWORD_3', '0715551234', '1995-03-14'),
-('Anelisa Botha', 'anelisa.botha@gmail.com',
- 'HASHED_PASSWORD_4', '0725559876', '1998-11-02');
-GO
+## 2. System Objectives
 
--- Events
-INSERT INTO Event
-(OrganiserID, EventName, EventDate, Location, Description, EventType, Status) VALUES
-(1, 'Pretoria Spring Fun Run', '2026-09-20 07:00:00',
- 'Union Buildings, Pretoria',
- 'A community fun run through the Pretoria CBD.',
- 'Running', 'Scheduled'),
-(1, 'Tshwane Cycle Challenge', '2026-10-11 06:30:00',
- 'Loftus Versfeld, Pretoria',
- 'Road cycling event for all skill levels.',
- 'Cycling', 'Scheduled'),
-(2, 'Joburg Heritage Walk', '2026-09-24 08:00:00',
- 'Constitution Hill, Johannesburg',
- 'A heritage-themed community walk.',
- 'Walking', 'Scheduled');
-GO
+The main objectives of the RaceDay system are to:
 
--- Categories
-INSERT INTO Category
-(EventID, CategoryName, DistanceKm, EntryFee, MaxParticipants) VALUES
-(1, '5km Fun Run', 5.00, 100.00, 500),
-(1, '10km Race', 10.00, 150.00, 300),
-(2, '40km Road Ride', 40.00, 250.00, 200),
-(2, '80km Road Ride', 80.00, 350.00, 150),
-(3, '5km Heritage Walk', 5.00, 50.00, 400);
-GO
+1. Allow Organisers to create and manage sporting events.
+2. Allow Organisers to create categories for their events.
+3. Allow Participants to browse available events.
+4. Allow Participants to enrol in event categories.
+5. Store participant enrolment information.
+6. Store race results after an event has taken place.
+7. Prevent invalid and duplicate database records.
+8. Provide a structured database that can be accessed through a RESTful API.
+9. Use GitHub for version control.
+10. Use GitHub Actions to automatically validate the required Part 1 files.
 
--- Sample Enrolments
-INSERT INTO Enrolment
-(ParticipantID, CategoryID, BibNumber, Status) VALUES
-(1, 1, 'BIB0001', 'Confirmed'),
-(1, 3, 'BIB0002', 'Confirmed'),
-(2, 2, 'BIB0003', 'Confirmed'),
-(2, 5, 'BIB0004', 'Confirmed');
-GO
+---
 
--- Sample Results
-INSERT INTO Result
-(EnrolmentID, FinishTime, Position, Status) VALUES
-(1, '00:28:45', 12, 'Finished'),
-(3, '00:52:10', 5, 'Finished');
-GO
-Verification Queries
-Run these queries in SSMS after the database has been created.
-1. View All Organisers
-SELECT
-    OrganiserID,
-    FullName,
-    Email,
-    PhoneNumber,
-    CreatedAt
-FROM Organiser;
-GO
-2. View All Participants
-SELECT
-    ParticipantID,
-    FullName,
-    Email,
-    PhoneNumber,
-    DateOfBirth,
-    CreatedAt
-FROM Participant;
-GO
-3. View All Events with Organisers
-SELECT
-    e.EventID,
-    e.EventName,
-    e.EventDate,
-    e.Location,
-    e.EventType,
-    e.Status,
-    o.FullName AS Organiser
-FROM Event e
-INNER JOIN Organiser o
-    ON e.OrganiserID = o.OrganiserID;
-GO
-4. View Events and Categories
-SELECT
-    e.EventName,
-    c.CategoryName,
-    c.DistanceKm,
-    c.EntryFee,
-    c.MaxParticipants
-FROM Event e
-INNER JOIN Category c
-    ON e.EventID = c.EventID
-ORDER BY e.EventID;
-GO
-5. View Participant Enrolments
-SELECT
-    p.FullName AS Participant,
-    e.EventName,
-    c.CategoryName,
-    en.BibNumber,
-    en.EnrolmentDate,
-    en.Status
-FROM Enrolment en
-INNER JOIN Participant p
-    ON en.ParticipantID = p.ParticipantID
-INNER JOIN Category c
-    ON en.CategoryID = c.CategoryID
-INNER JOIN Event e
-    ON c.EventID = e.EventID;
-GO
-6. View Race Results
-SELECT
-    p.FullName AS Participant,
-    e.EventName,
-    c.CategoryName,
-    r.FinishTime,
-    r.Position,
-    r.Status
-FROM Result r
-INNER JOIN Enrolment en
-    ON r.EnrolmentID = en.EnrolmentID
-INNER JOIN Participant p
-    ON en.ParticipantID = p.ParticipantID
-INNER JOIN Category c
-    ON en.CategoryID = c.CategoryID
-INNER JOIN Event e
-    ON c.EventID = e.EventID;
-GO
-How to Drop / Reset the Database
-WARNING: This deletes the RaceDayDB database and all of its data.
-Reset database
-USE master;
-GO
+## 3. User Roles
 
-IF DB_ID('RaceDayDB') IS NOT NULL
-BEGIN
-    ALTER DATABASE RaceDayDB
-    SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+### 3.1 Organiser
 
-    DROP DATABASE RaceDayDB;
-END
-GO
-API Endpoint Plan
-The API Endpoint Plan describes the REST API required for the RaceDay system. The complete endpoint plan is stored as RaceDay_API_Endpoint_Plan.docx in the docs folder.
-Area	Main Endpoints / Functions
-Authentication	Organiser registration; Participant registration; Organiser login; Participant login
-User Profile	View and update the logged-in user's profile
-Events	List events; view event details; create, update and delete events
-Categories	View categories; create, update and delete categories
-Enrolments	Enrol in a category; view own enrolments; cancel enrolments; organiser view of event enrolments
-Results	Capture results; update results; view personal results; view event results
-User Roles
-Role	Main Responsibilities
-Organiser	Create, edit and delete events; manage categories; view event enrolments; capture and update participant results.
-Participant	Create an account; browse events; view categories; enrol in events; view enrolments and personal results.
-GitHub Actions / CI
-GitHub Actions validates the required Part 1 repository structure. The workflow checks that the docs folder exists and that the ERD, API Endpoint Plan and SQL database script are present.
-Workflow: .github/workflows/validate.yml
-name: Validate RaceDay Part 1
+An Organiser is responsible for creating and managing events.
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+The Organiser can:
 
-jobs:
-  validate:
-    runs-on: ubuntu-latest
+- Create events
+- Edit events
+- Delete events
+- Create event categories
+- Update event categories
+- Delete event categories
+- View participant enrolments
+- Capture participant results
+- View results for events
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+The Organiser is linked to events through the `OrganiserID` foreign key in the `Event` table.
 
-      - name: Check required docs folder
-        run: |
-          test -d docs
+---
 
-      - name: Check required ERD
-        run: |
-          test -f docs/RaceDay_ERD.png
+### 3.2 Participant
 
-      - name: Check required API Endpoint Plan
-        run: |
-          test -f docs/RaceDay_API_Endpoint_Plan.docx
+A Participant is a person who takes part in RaceDay events.
 
-      - name: Check required SQL script
-        run: |
-          test -f docs/RaceDay_Database.sql
-A screenshot of the successful green build is included in the repository as docs/CI-Green-Build.png.
-Project Structure
-RaceDay/
-│
-├── docs/
-│   ├── RaceDay_ERD.png
-│   ├── RaceDay_API_Endpoint_Plan.docx
-│   ├── RaceDay_Database.sql
-│   └── CI-Green-Build.png
-│
-├── .github/
-│   └── workflows/
-│       └── validate.yml
-│
-└── README.md
-Testing
-10.	Create RaceDayDB using the SQL script.
-11.	Confirm that all six tables are created.
-12.	Confirm the primary and foreign key relationships.
-13.	Confirm that the required sample data has been inserted.
-14.	Run the verification queries.
-15.	Confirm that GitHub Actions completes successfully.
-Statement of Academic Integrity
-I confirm that all design decisions reflect my understanding of the RaceDay system. I have reviewed and validated the database schema, ERD, API Endpoint Plan and SQL script. The final submission represents my own work and analysis.
-Tools Used
-Tool	Purpose
-SQL Server Management Studio (SSMS)	Database creation, SQL execution and testing
-Microsoft SQL Server	Database platform
-GitHub	Version control and repository hosting
-GitHub Actions	Continuous integration validation
-Mermaid Live Editor	ERD creation
-Microsoft Word	Documentation
-Text Editor	Editing project files
-References
-•	Microsoft SQL Server Documentation
-•	SQL Server Management Studio (SSMS) Documentation
-•	Microsoft SQL Server Foreign Key Constraints Documentation
+The Participant can:
 
+- Create an account
+- View upcoming events
+- View event information
+- View available categories
+- Enrol in an event category
+- View their enrolments
+- View their race results
+
+Participants are connected to events through the `Enrolment` table.
+
+---
+
+# 4. Technology Stack
+
+| Component | Technology |
+|---|---|
+| Database | Microsoft SQL Server |
+| Database Tool | SQL Server Management Studio (SSMS) |
+| Database Language | T-SQL |
+| Version Control | GitHub |
+| CI/CD | GitHub Actions |
+| ERD Tool | Mermaid Live Editor |
+| Documentation | Microsoft Word / Markdown |
+
+---
+
+# 5. Database Design
+
+The RaceDay database is called:
+
+`RaceDayDB`
+
+The database contains six core entities:
+
+| Entity | Purpose |
+|---|---|
+| Organiser | Stores event organiser information |
+| Participant | Stores participant information |
+| Event | Stores RaceDay events |
+| Category | Stores categories available for events |
+| Enrolment | Stores participant entries into categories |
+| Result | Stores participant race results |
+
+The database follows the relationships identified in the ERD and is designed so that related information is stored separately instead of duplicating the same information across multiple tables.
+
+---
+
+# 6. Entity Relationship Diagram (ERD)
+
+The ERD represents the structure of the RaceDay database and shows how the entities are connected.
+
+![RaceDay ERD](docs/RaceDay_ERD.png)
+
+### Main Relationships
+
+| Relationship | Cardinality | Explanation |
+|---|---|---|
+| Organiser → Event | 1 : Many | One Organiser can manage many Events |
+| Event → Category | 1 : Many | One Event can contain many Categories |
+| Participant → Enrolment | 1 : Many | One Participant can have many Enrolments |
+| Category → Enrolment | 1 : Many | One Category can contain many Enrolments |
+| Enrolment → Result | 1 : 0..1 | An Enrolment can have zero or one Result |
+
+### ERD Design Decisions
+
+The `Event` table contains `OrganiserID` because every event must be associated with an organiser.
+
+The `Category` table contains `EventID` because categories belong to a specific event.
+
+The `Enrolment` table contains both `ParticipantID` and `CategoryID`. This connects participants to the categories they have entered and resolves the many-to-many relationship between Participants and Categories.
+
+The `Result` table contains `EnrolmentID`. A result is associated with a specific enrolment.
+
+The relationship between `Enrolment` and `Result` is optional because a participant can enrol before the race has taken place. Therefore, an enrolment does not necessarily have a result immediately.
+
+---
+
+# 7. Database Tables
+
+## 7.1 Organiser
+
+The `Organiser` table stores information about users who manage RaceDay events.
+
+Important fields include:
+
+- `OrganiserID` – Primary key
+- `FullName` – Organiser's name
+- `Email` – Unique email address
+- `PasswordHash` – Stores the password hash
+- `PhoneNumber` – Optional contact number
+- `CreatedAt` – Date and time the organiser was created
+
+---
+
+## 7.2 Participant
+
+The `Participant` table stores information about people who participate in RaceDay events.
+
+Important fields include:
+
+- `ParticipantID` – Primary key
+- `FullName` – Participant's name
+- `Email` – Unique email address
+- `PasswordHash` – Stores the password hash
+- `PhoneNumber` – Optional contact number
+- `DateOfBirth` – Participant's date of birth
+- `CreatedAt` – Date and time the participant was created
+
+---
+
+## 7.3 Event
+
+The `Event` table stores the main information about each RaceDay event.
+
+Important fields include:
+
+- `EventID` – Primary key
+- `OrganiserID` – Foreign key to Organiser
+- `EventName` – Name of the event
+- `EventDate` – Date and time of the event
+- `Location` – Event location
+- `Description` – Event description
+- `EventType` – Running, Cycling or Walking
+- `Status` – Scheduled, Cancelled or Completed
+- `CreatedAt` – Date and time the event was created
+
+---
+
+## 7.4 Category
+
+The `Category` table stores the different participation categories available for each event.
+
+Important fields include:
+
+- `CategoryID` – Primary key
+- `EventID` – Foreign key to Event
+- `CategoryName` – Name of the category
+- `DistanceKm` – Distance of the category
+- `EntryFee` – Cost of entering the category
+- `MaxParticipants` – Maximum number of participants
+
+---
+
+## 7.5 Enrolment
+
+The `Enrolment` table records when a participant enters an event category.
+
+Important fields include:
+
+- `EnrolmentID` – Primary key
+- `ParticipantID` – Foreign key to Participant
+- `CategoryID` – Foreign key to Category
+- `EnrolmentDate` – Date of enrolment
+- `BibNumber` – Unique race number
+- `Status` – Pending, Confirmed or Cancelled
+
+The combination of `ParticipantID` and `CategoryID` is unique so that the same participant cannot enrol in the same category more than once.
+
+---
+
+## 7.6 Result
+
+The `Result` table stores race performance information.
+
+Important fields include:
+
+- `ResultID` – Primary key
+- `EnrolmentID` – Foreign key to Enrolment
+- `FinishTime` – Participant finish time
+- `Position` – Final race position
+- `Status` – Finished, DNF or DSQ
+- `CapturedAt` – Date and time the result was captured
+
+Each enrolment can have a maximum of one result.
+
+---
+
+# 8. Database Integrity and Constraints
+
+Database constraints were included to ensure that incorrect or duplicate information cannot easily be inserted.
+
+## Primary Keys
+
+Every table has a primary key that uniquely identifies each record.
+
+Examples:
+
+```text
+OrganiserID
+ParticipantID
+EventID
+CategoryID
+EnrolmentID
+ResultID
