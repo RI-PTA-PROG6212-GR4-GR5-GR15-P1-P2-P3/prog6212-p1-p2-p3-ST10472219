@@ -63,6 +63,10 @@ The RaceDay system uses the following main relationships:
 - One Category can have many Enrolments.
 - One Enrolment can have zero or one Result.
 
+## Sample Data
+
+The SQL script includes sample organisers, participants, events, event categories, enrolments and results for testing the RaceDay database.
+
 These relationships are represented in the RaceDay ERD and implemented using primary and foreign keys in the SQL database.
 
 ## GitHub Actions / CI
