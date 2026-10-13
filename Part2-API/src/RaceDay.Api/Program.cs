@@ -10,6 +10,17 @@ builder.Services.AddDbContext<RaceDayDbContext>(options =>
 
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
+// ---- Session-based authentication (user id + role are kept in the server-side session) ----
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.Cookie.Name = ".RaceDay.Session";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.IdleTimeout = TimeSpan.FromMinutes(60);
+});
+
 builder.Services.AddControllers();
 
 // ---- Swagger ----
@@ -39,6 +50,7 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
+app.UseSession();
 app.MapControllers();
 
 app.Run();
