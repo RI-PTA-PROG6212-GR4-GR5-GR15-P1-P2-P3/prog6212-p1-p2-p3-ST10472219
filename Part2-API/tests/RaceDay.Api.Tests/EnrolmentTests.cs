@@ -144,6 +144,19 @@ public class EnrolmentTests
     }
 
     [Fact]
+    public async Task Enrol_EventAlreadyTakenPlace_Returns409()
+    {
+        using var db = NewDb();
+        var organiser = AddOrganiser(db);
+        var participant = AddParticipant(db);
+        var category = AddCategory(db, AddEvent(db, organiser, "Last Week's Run", daysFromNow: -7));
+        var controller = new EnrolmentsController(db).WithSession(participant.ParticipantID, Roles.Participant);
+
+        Assert.Equal(409, Status(await controller.Enrol(category.CategoryID)));
+        Assert.Empty(db.Enrolments);
+    }
+
+    [Fact]
     public async Task Enrol_AfterCancelling_ReactivatesTheSameEnrolment()
     {
         using var db = NewDb();

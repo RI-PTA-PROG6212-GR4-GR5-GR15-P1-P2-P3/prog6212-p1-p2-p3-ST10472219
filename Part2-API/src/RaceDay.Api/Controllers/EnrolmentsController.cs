@@ -19,7 +19,7 @@ public class EnrolmentsController : ApiControllerBase
     /// **Role required:** Participant (identified from the session). **Expects:** nothing in the body.
     /// **Returns:** 201 enrolment (links participant, event and category) with its bib number; 401 not logged in;
     /// 403 not a Participant; 404 category not found;
-    /// 409 if already enrolled, the category is full, or the event is not open (cancelled/completed).
+    /// 409 if already enrolled, the category is full, or the event is not open (cancelled, completed or already past).
     /// </remarks>
     [HttpPost("api/categories/{id:int}/enrol")]
     [SessionAuthorize(Roles.Participant)]
@@ -37,6 +37,8 @@ public class EnrolmentsController : ApiControllerBase
 
         if (category.Event.Status != EventStatuses.Scheduled)
             return ConflictError($"This event is {category.Event.Status.ToLowerInvariant()} and is not open for enrolment.");
+        if (category.Event.EventDate <= DateTime.UtcNow)
+            return ConflictError("This event has already taken place and is no longer open for enrolment.");
 
         var participantId = CurrentUserId;
         var existing = await _db.Enrolments
