@@ -1,4 +1,11 @@
+using Microsoft.EntityFrameworkCore;
+using RaceDay.Api.Data;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// ---- Database (EF Core, SQL Server, code-first) ----
+builder.Services.AddDbContext<RaceDayDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("RaceDayDb")));
 
 builder.Services.AddControllers();
 
