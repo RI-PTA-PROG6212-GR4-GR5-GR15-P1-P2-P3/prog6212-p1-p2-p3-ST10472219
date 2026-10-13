@@ -1,4 +1,6 @@
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using RaceDay.Api.Data;
 using RaceDay.Api.Services;
 
@@ -25,7 +27,24 @@ builder.Services.AddControllers();
 
 // ---- Swagger ----
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "RaceDay API",
+        Version = "v1",
+        Description =
+            "RESTful API for the RaceDay event management system (South African road running, cycling and walking events).\n\n" +
+            "**Roles:** Organiser (manage events, categories, enrolments and results) and Participant (browse, enrol, view own results).\n\n" +
+            "**Authentication:** session based. Call `POST /api/auth/login` (or a register endpoint) first - the session cookie is stored " +
+            "by the browser and sent automatically when you use *Try it out* below. Role-restricted endpoints return 401 when not logged in " +
+            "and 403 for the wrong role."
+    });
+
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath)) c.IncludeXmlComments(xmlPath);
+});
 
 var app = builder.Build();
 
@@ -47,11 +66,17 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "RaceDay API v1");
+    c.RoutePrefix = "swagger";
+    c.DocumentTitle = "RaceDay API";
+});
 
 app.UseHttpsRedirection();
 app.UseSession();
 app.MapControllers();
+app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 
 app.Run();
 
