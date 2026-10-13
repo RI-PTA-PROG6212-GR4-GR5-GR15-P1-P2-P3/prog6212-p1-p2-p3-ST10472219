@@ -1,12 +1,14 @@
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using RaceDay.Api.Models;
 using RaceDay.Api.Services;
 
 namespace RaceDay.Api.Data;
 
 /// <summary>
-/// Creates the database from the code-first model (or applies EF migrations when migration files exist)
-/// and seeds the same sample data as the Part 1 SQL script.
+/// Applies the EF Core migrations (creating RaceDayDB if needed) and seeds the same sample data as the Part 1 SQL script.
 /// </summary>
 public static class DbInitializer
 {
@@ -15,10 +17,15 @@ public static class DbInitializer
 
     public static async Task InitialiseAsync(RaceDayDbContext db, IPasswordHasher hasher)
     {
-        if (db.Database.GetMigrations().Any())
+        if (db.Database.IsRelational())
+        {
+            await BaselineScriptCreatedDatabaseAsync(db);
             await db.Database.MigrateAsync();
+        }
         else
+        {
             await db.Database.EnsureCreatedAsync();
+        }
 
         await SeedAsync(db, hasher);
     }
@@ -56,5 +63,29 @@ public static class DbInitializer
         db.AddRange(thabo, lindiwe, sipho, anelisa, springRun, cycle, walk,
                     fun5, race10, ride40, ride80, walk5, e1, e2, e3, e4, r1, r3);
         await db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// If RaceDayDB was already built by running docs/RaceDay_Database.sql, the tables exist but EF has no migration
+    /// history, so MigrateAsync would fail trying to create them again. The script builds the same schema as the
+    /// InitialCreate migration, so it is recorded as applied instead.
+    /// </summary>
+    private static async Task BaselineScriptCreatedDatabaseAsync(RaceDayDbContext db)
+    {
+        if (!await db.Database.CanConnectAsync()) return; // database does not exist yet
+        if ((await db.Database.GetAppliedMigrationsAsync()).Any()) return;
+
+        var tables = await db.Database
+            .SqlQueryRaw<int>("SELECT COUNT(*) AS [Value] FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Organiser'")
+            .SingleAsync();
+        if (tables == 0) return;
+
+        var initialMigration = db.Database.GetMigrations().First();
+        var efVersion = typeof(DbContext).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion.Split('+')[0];
+
+        var history = db.GetService<IHistoryRepository>();
+        await db.Database.ExecuteSqlRawAsync(history.GetCreateIfNotExistsScript());
+        await db.Database.ExecuteSqlRawAsync(history.GetInsertScript(new HistoryRow(initialMigration, efVersion)));
     }
 }
