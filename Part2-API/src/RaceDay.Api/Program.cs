@@ -18,6 +18,23 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// Create the database (or apply migrations) and seed the sample data on start-up.
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<RaceDayDbContext>();
+    var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        await DbInitializer.InitialiseAsync(db, hasher);
+    }
+    catch (Exception ex)
+    {
+        logger.LogCritical(ex, "Could not initialise the database. Check the 'RaceDayDb' connection string in appsettings.json.");
+        throw;
+    }
+}
+
 app.UseSwagger();
 app.UseSwaggerUI();
 
