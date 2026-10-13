@@ -1,0 +1,15 @@
+## .NET / Visual Studio
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userprefs
+TestResults/
+*.trx
+*.log
+.idea/
+.vscode/
+## OS
+.DS_Store
+Thumbs.db
