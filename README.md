@@ -444,3 +444,4 @@ There are 135 automated tests. Most of them call the controllers directly agains
 # 15. CI/CD
 
 `.github/workflows/ci.yml` runs on every push and pull request. It restores, builds (Release) and runs all the tests on .NET 8, then uploads the test results as a build artifact. The Part 1 workflow (`validate.yml`) still checks that the Part 1 documents are in the `docs` folder.
+<img width="1365" height="767" alt="image" src="https://github.com/user-attachments/assets/636494da-0c58-4469-b3a6-ffca4a3e67e5" />
