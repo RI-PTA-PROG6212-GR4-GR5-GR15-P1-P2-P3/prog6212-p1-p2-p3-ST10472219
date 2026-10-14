@@ -264,7 +264,6 @@ ResultID
 
 ## Part 2 – RESTful API, Authentication, Unit Testing and CI/CD
 
-**Part 2 demo video:** _link to be added_
 
 ---
 
