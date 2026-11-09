@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using RaceDay.Api.Data;
 using RaceDay.Api.Dtos;
 using RaceDay.Api.Filters;
+using RaceDay.Api.Services;
 
 namespace RaceDay.Api.Controllers;
 
@@ -36,6 +37,54 @@ public class ProfileController : ApiControllerBase
         HttpContext.Session.Clear(); // account no longer exists
         return Error(StatusCodes.Status401Unauthorized, "Authentication required. Please log in.");
     }
+
+
+
+    /// <summary>Streams the logged-in Participant's profile picture from blob storage.</summary>
+    /// <remarks>**Role required:** Participant. **Returns:** 200 image; 404 if there is no picture.</remarks>
+    [HttpGet("picture")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetPicture([FromServices] IBlobStorage blobs)
+    {
+        if (CurrentRole != Roles.Participant) return NotFound();
+
+        var participant = await _db.Participants.AsNoTracking().FirstOrDefaultAsync(x => x.ParticipantID == CurrentUserId);
+        if (participant?.ProfilePictureUrl is null) return NotFound();
+
+        var image = await blobs.DownloadAsync("profiles", participant.ProfilePictureUrl);
+        return image is null ? NotFound() : File(image.Content, image.ContentType);
+    }
+
+    /// <summary>Uploads or replaces the logged-in Participant's profile picture.</summary>
+    /// <remarks>
+    /// **Role required:** Participant. **Expects:** multipart form with a `file` (JPG, PNG or WEBP, up to 5 MB).
+    /// **Returns:** 200 updated profile; 400 invalid file or wrong role; 401 not logged in.
+    /// </remarks>
+    [HttpPost("picture")]
+    [RequestSizeLimit(6_000_000)]
+    [ProducesResponseType(typeof(ProfileDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UploadPicture([FromForm] ImageUploadRequest request, [FromServices] IBlobStorage blobs)
+    {
+        var file = request?.File;
+        if (CurrentRole != Roles.Participant)
+            return BadRequestError("Profile pictures are available for participant accounts.");
+        if (file is null || file.Length == 0)
+            return BadRequestError("Choose an image to upload.");
+        if (file.Length > 5_000_000 || !AllowedImageTypes.Contains(file.ContentType))
+            return BadRequestError("Upload a JPG, PNG or WEBP image smaller than 5 MB.");
+
+        var participant = await _db.Participants.FindAsync(CurrentUserId);
+        if (participant is null) return NotFoundError("Profile not found.");
+
+        participant.ProfilePictureUrl = await blobs.UploadAsync(file, "profiles", $"participant-{CurrentUserId}");
+        await _db.SaveChangesAsync();
+        return Ok(Mappers.ToProfile(participant));
+    }
+
+    private static readonly string[] AllowedImageTypes = { "image/jpeg", "image/png", "image/webp" };
 
     /// <summary>Updates the logged-in user's own profile.</summary>
     /// <remarks>
