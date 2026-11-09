@@ -52,6 +52,12 @@ public static class EventTypes
     }
 }
 
+public static class CategoryTypes
+{
+    public const string Distance = "Distance";
+    public const string Age = "Age";
+}
+
 public static class EnrolmentStatuses
 {
     public const string Pending = "Pending";

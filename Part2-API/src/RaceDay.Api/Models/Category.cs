@@ -9,6 +9,11 @@ public class Category
     public decimal EntryFee { get; set; }
     public int MaxParticipants { get; set; } = 100;
 
+    /// <summary>"Distance" (a route length such as 10km) or "Age" (an age group such as 12-17).</summary>
+    public string CategoryType { get; set; } = CategoryTypes.Distance;
+    public int? MinimumAge { get; set; }
+    public int? MaximumAge { get; set; }
+
     public Event Event { get; set; } = null!;
     public ICollection<Enrolment> Enrolments { get; set; } = new List<Enrolment>();
 }

@@ -9,6 +9,7 @@ public class Participant
     public string? PhoneNumber { get; set; }
     public DateOnly? DateOfBirth { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string? ProfilePictureUrl { get; set; }
 
     public ICollection<Enrolment> Enrolments { get; set; } = new List<Enrolment>();
 }

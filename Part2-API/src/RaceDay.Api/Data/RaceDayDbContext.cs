@@ -43,6 +43,7 @@ public class RaceDayDbContext : DbContext
             e.Property(x => x.PhoneNumber).HasMaxLength(20);
             e.Property(x => x.DateOfBirth).HasColumnType("date");
             e.Property(x => x.CreatedAt).HasColumnType("datetime2").HasDefaultValueSql("GETDATE()");
+            e.Property(x => x.ProfilePictureUrl).HasMaxLength(1000);
         });
 
         modelBuilder.Entity<Event>(e =>
@@ -60,6 +61,8 @@ public class RaceDayDbContext : DbContext
             e.Property(x => x.EventType).HasMaxLength(20).IsRequired().HasDefaultValue(EventTypes.Running);
             e.Property(x => x.Status).HasMaxLength(20).IsRequired().HasDefaultValue(EventStatuses.Scheduled);
             e.Property(x => x.CreatedAt).HasColumnType("datetime2").HasDefaultValueSql("GETDATE()");
+            e.Property(x => x.BannerImageUrl).HasMaxLength(1000);
+            e.Property(x => x.ResultsPublished).HasDefaultValue(false);
 
             e.HasOne(x => x.Organiser)
              .WithMany(o => o.Events)
@@ -80,6 +83,9 @@ public class RaceDayDbContext : DbContext
             e.Property(x => x.DistanceKm).HasPrecision(6, 2);
             e.Property(x => x.EntryFee).HasPrecision(8, 2).HasDefaultValue(0m);
             e.Property(x => x.MaxParticipants).HasDefaultValue(100);
+            e.Property(x => x.CategoryType).HasMaxLength(20).HasDefaultValue(CategoryTypes.Distance);
+            e.Property(x => x.MinimumAge);
+            e.Property(x => x.MaximumAge);
 
             e.HasOne(x => x.Event)
              .WithMany(ev => ev.Categories)

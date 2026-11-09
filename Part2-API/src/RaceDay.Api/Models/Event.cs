@@ -11,6 +11,8 @@ public class Event
     public string EventType { get; set; } = EventTypes.Running;
     public string Status { get; set; } = EventStatuses.Scheduled;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string? BannerImageUrl { get; set; }
+    public bool ResultsPublished { get; set; }
 
     public Organiser Organiser { get; set; } = null!;
     public ICollection<Category> Categories { get; set; } = new List<Category>();
