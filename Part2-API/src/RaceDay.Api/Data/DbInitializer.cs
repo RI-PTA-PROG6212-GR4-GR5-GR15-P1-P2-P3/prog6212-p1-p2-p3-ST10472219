@@ -52,7 +52,7 @@ public static class DbInitializer
         var anelisa = new Participant { FullName = "Anelisa Botha", Email = "anelisa.botha@gmail.com", PasswordHash = hash, PhoneNumber = "0725559876", DateOfBirth = new DateOnly(1998, 11, 2) };
 
         // Events from the Part 1 script. Their dates are fixed, so once they have passed they are seeded as Completed.
-        var springRun = new Event { Organiser = thabo, EventName = "Pretoria Spring Fun Run", EventDate = new DateTime(2026, 9, 20, 7, 0, 0), Location = "Union Buildings, Pretoria", Description = "A community fun run through the Pretoria CBD.", EventType = EventTypes.Running };
+        var springRun = new Event { Organiser = thabo, EventName = "Pretoria Spring Fun Run", ResultsPublished = true, EventDate = new DateTime(2026, 9, 20, 7, 0, 0), Location = "Union Buildings, Pretoria", Description = "A community fun run through the Pretoria CBD.", EventType = EventTypes.Running };
         var cycle = new Event { Organiser = thabo, EventName = "Tshwane Cycle Challenge", EventDate = new DateTime(2026, 10, 11, 6, 30, 0), Location = "Loftus Versfeld, Pretoria", Description = "Road cycling event for all skill levels.", EventType = EventTypes.Cycling };
         var walk = new Event { Organiser = lindiwe, EventName = "Joburg Heritage Walk", EventDate = new DateTime(2026, 9, 24, 8, 0, 0), Location = "Constitution Hill, Johannesburg", Description = "A heritage-themed community walk.", EventType = EventTypes.Walking };
         foreach (var ev in new[] { springRun, cycle, walk })
@@ -70,17 +70,18 @@ public static class DbInitializer
         var night5 = new Category { Event = nightRun, CategoryName = "5km Night Run", DistanceKm = 5m, EntryFee = 120m, MaxParticipants = 400 };
         var night10 = new Category { Event = nightRun, CategoryName = "10km Night Race", DistanceKm = 10m, EntryFee = 180m, MaxParticipants = 250 };
         var cradle60 = new Category { Event = cradleRide, CategoryName = "60km Tour", DistanceKm = 60m, EntryFee = 300m, MaxParticipants = 200 };
+        var junior5 = new Category { Event = nightRun, CategoryName = "Junior 5km (12-17)", DistanceKm = 5m, EntryFee = 60m, MaxParticipants = 100, CategoryType = CategoryTypes.Age, MinimumAge = 12, MaximumAge = 17 };
 
         var e1 = new Enrolment { Participant = sipho, Category = fun5, BibNumber = "BIB0001", Status = EnrolmentStatuses.Confirmed };
         var e2 = new Enrolment { Participant = sipho, Category = ride40, BibNumber = "BIB0002", Status = EnrolmentStatuses.Confirmed };
         var e3 = new Enrolment { Participant = anelisa, Category = race10, BibNumber = "BIB0003", Status = EnrolmentStatuses.Confirmed };
         var e4 = new Enrolment { Participant = anelisa, Category = walk5, BibNumber = "BIB0004", Status = EnrolmentStatuses.Confirmed };
 
-        var r1 = new Result { Enrolment = e1, FinishTime = new TimeSpan(0, 28, 45), Position = 12, Status = ResultStatuses.Finished };
-        var r3 = new Result { Enrolment = e3, FinishTime = new TimeSpan(0, 52, 10), Position = 5, Status = ResultStatuses.Finished };
+        var r1 = new Result { Enrolment = e1, FinishTime = new TimeSpan(0, 28, 45), Position = 1, Status = ResultStatuses.Finished };
+        var r3 = new Result { Enrolment = e3, FinishTime = new TimeSpan(0, 52, 10), Position = 1, Status = ResultStatuses.Finished };
 
         db.AddRange(thabo, lindiwe, sipho, anelisa, springRun, cycle, walk, nightRun, cradleRide,
-                    fun5, race10, ride40, ride80, walk5, night5, night10, cradle60, e1, e2, e3, e4, r1, r3);
+                    fun5, race10, ride40, ride80, walk5, night5, night10, cradle60, junior5, e1, e2, e3, e4, r1, r3);
         await db.SaveChangesAsync();
     }
 
