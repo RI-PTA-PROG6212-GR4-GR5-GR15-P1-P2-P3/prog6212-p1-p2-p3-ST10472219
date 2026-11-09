@@ -1,6 +1,7 @@
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.Swagger;
 using RaceDay.Api.Data;
 using RaceDay.Api.Services;
 
@@ -11,6 +12,9 @@ builder.Services.AddDbContext<RaceDayDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("RaceDayDb")));
 
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
+
+// ---- Image storage (event banners and profile pictures). Only the API talks to Azure Blob Storage. ----
+builder.Services.AddSingleton<IBlobStorage, BlobStorage>();
 
 // ---- Session-based authentication (user id + role are kept in the server-side session) ----
 builder.Services.AddDistributedMemoryCache();
@@ -40,6 +44,10 @@ builder.Services.AddSwaggerGen(c =>
             "by the browser and sent automatically when you use *Try it out* below. Role-restricted endpoints return 401 when not logged in " +
             "and 403 for the wrong role."
     });
+
+    // Be tolerant of duplicate routes/type names so the document always generates.
+    c.CustomSchemaIds(type => type.FullName!.Replace('+', '.'));
+    c.ResolveConflictingActions(actions => actions.First());
 
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
@@ -76,6 +84,23 @@ app.UseSwaggerUI(c =>
 app.UseHttpsRedirection();
 app.UseSession();
 app.MapControllers();
+
+// Development helper: open /swagger-debug to see the exact reason if swagger.json ever fails to generate.
+if (app.Environment.IsDevelopment())
+{
+    app.MapGet("/swagger-debug", (ISwaggerProvider swagger) =>
+    {
+        try
+        {
+            swagger.GetSwagger("v1");
+            return Results.Text("Swagger document generated fine.");
+        }
+        catch (Exception ex)
+        {
+            return Results.Text(ex.ToString());
+        }
+    });
+}
 app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 
 app.Run();
