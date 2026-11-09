@@ -1,3 +1,4 @@
+
 # RaceDay – Part 3 (ASP.NET Core MVC front end)
 
 PROG6212 POE Part 3. An MVC web app that consumes the Part 2 RESTful API. Organisers manage events, categories,
@@ -5,7 +6,7 @@ enrolments and results; Participants browse, enrol and view their race history.
 
 
 - **Green CI build:** 
-` 
+` <img width="1365" height="716" alt="CI (docsCI-Part3-Green png)" src="https://github.com/user-attachments/assets/7dfd18a1-11cb-4e08-af6d-86e03c1b04e4" />
 
 ## Architecture
 
