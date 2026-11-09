@@ -13,3 +13,7 @@ TestResults/
 ## OS
 .DS_Store
 Thumbs.db
+
+# Local secrets and generated artifacts
+.env
+*.secrets.json

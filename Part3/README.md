@@ -45,6 +45,18 @@ The API applies EF Core migrations and seeds demo data on start. Demo accounts (
 
 The MVC image is multi-stage (SDK build → ASP.NET runtime), runs as a non-root user and listens on port 8080.
 
+To store images in a real Azure account instead of Azurite, put the account's connection string in `.env` as
+`BLOB_CONNECTION_STRING=...` before running compose. Leave it empty to use Azurite.
+
+## Docker run command (MVC image on its own)
+
+From the repository root, with the API already running on port 8081 (for example from compose):
+
+```
+docker build -f Part3/Part3-MVC/Dockerfile -t raceday-mvc .
+docker run --rm -p 8080:8080 -e Api__BaseUrl=http://host.docker.internal:8081/ raceday-mvc
+```
+
 ## Run locally without Docker
 
 Double-click `run-local.bat` (API on :5080, MVC on :5000, opens the browser), or run the two commands below.
