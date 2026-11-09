@@ -9,7 +9,7 @@ public record ProfileDto(
     string Email,
     string? PhoneNumber,
     DateOnly? DateOfBirth,
-    DateTime CreatedAt);
+    DateTime CreatedAt, string? ProfilePictureUrl = null);
 
 public record AuthResponse(string Role, ProfileDto User);
 
@@ -23,7 +23,7 @@ public record EventDto(
     string? Description,
     string EventType,
     string Status,
-    int CategoryCount);
+    int CategoryCount, string? BannerImageUrl = null);
 
 public record CategoryDto(
     int CategoryID,
@@ -32,7 +32,7 @@ public record CategoryDto(
     decimal DistanceKm,
     decimal EntryFee,
     int MaxParticipants,
-    int EnrolledCount);
+    int EnrolledCount, string CategoryType = "Distance", int? MinimumAge = null, int? MaximumAge = null);
 
 public record EventDetailDto(
     int EventID,
@@ -44,7 +44,7 @@ public record EventDetailDto(
     string? Description,
     string EventType,
     string Status,
-    IReadOnlyList<CategoryDto> Categories);
+    IReadOnlyList<CategoryDto> Categories, string? BannerImageUrl = null);
 
 public record EnrolmentDto(
     int EnrolmentID,
@@ -73,4 +73,8 @@ public record ResultDto(
     TimeSpan? FinishTime,
     int? Position,
     string Status,
-    DateTime CapturedAt);
+    DateTime CapturedAt, int TotalFinishers = 0, DateTime EventDate = default);
+
+public record DashboardEventDto(int EventID, string EventName, DateTime EventDate, int Enrolments);
+
+public record DashboardDto(int EventsCreated, int TotalEnrolments, IReadOnlyList<DashboardEventDto> Events);

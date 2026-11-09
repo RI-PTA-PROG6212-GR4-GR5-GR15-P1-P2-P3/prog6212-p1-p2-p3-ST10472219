@@ -65,6 +65,9 @@ public class CategoryRequest
     [Range(0.01, 9999.99)] public decimal DistanceKm { get; set; }
     [Range(0, 999999.99)] public decimal EntryFee { get; set; }
     [Range(1, 100000)] public int MaxParticipants { get; set; } = 100;
+    [Required] public string CategoryType { get; set; } = "Distance";
+    [Range(0,120)] public int? MinimumAge { get; set; }
+    [Range(0,120)] public int? MaximumAge { get; set; }
 }
 
 /// <summary>Body for capturing or correcting a result.</summary>
@@ -76,4 +79,11 @@ public class ResultRequest
     [Range(1, int.MaxValue)] public int? Position { get; set; }
     /// <summary>Finished, DNF or DSQ. Defaults to Finished.</summary>
     public string Status { get; set; } = ResultStatuses.Finished;
+}
+
+/// <summary>Multipart form body for image uploads (a single <c>file</c> field).</summary>
+public class ImageUploadRequest
+{
+    /// <summary>The image to upload (JPG, PNG or WEBP, up to 5 MB).</summary>
+    public IFormFile File { get; set; } = null!;
 }
