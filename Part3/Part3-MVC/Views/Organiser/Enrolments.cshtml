@@ -1,0 +1,32 @@
+@model IReadOnlyList<EnrolmentDto>
+@{ViewData["Title"]="Enrolments";}
+<h1>Event enrolments</h1>
+@if(ViewBag.Error!=null){
+    <div class="alert alert-warning">@ViewBag.Error</div>
+}
+<div class="table-responsive">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Participant</th>
+                <th>Category</th>
+                <th>Bib</th>
+                <th>Enrolled</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var e in Model){
+                <tr>
+                    <td>@e.ParticipantName</td>
+                    <td>@e.CategoryName (@e.DistanceKm km)</td>
+                    <td>@e.BibNumber</td>
+                    <td>@e.EnrolmentDate.ToString("dd MMM yyyy")</td>
+                    <td>
+                        <span class="status-pill status-@e.Status.ToLowerInvariant()">@e.Status</span>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

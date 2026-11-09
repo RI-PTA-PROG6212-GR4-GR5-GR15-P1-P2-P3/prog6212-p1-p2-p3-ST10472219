@@ -1,0 +1,49 @@
+@model IReadOnlyList<ResultEntryVm>
+@{ViewData["Title"]="Capture results";}
+<div class="section-head">
+    <div>
+        <h1>Results entry</h1>
+        <p class="text-muted">Capture a result for each enrolled participant after the event.</p>
+    </div>
+    <form asp-action="Publish" method="post">
+        <input type="hidden" name="id" value="@ViewBag.EventId"/>
+        <button class="btn btn-primary">Publish results</button>
+    </form>
+</div>
+@if(ViewBag.Error!=null){
+    <div class="alert alert-warning">@ViewBag.Error</div>
+}
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Participant</th>
+                <th>Category</th>
+                <th>Bib</th>
+                <th>Finish time</th>
+                <th>Position</th>
+                <th>Save</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var row in Model){
+                <tr>
+                    <td>@row.Enrolment.ParticipantName</td>
+                    <td>@row.Enrolment.CategoryName</td>
+                    <td>@row.Enrolment.BibNumber</td>
+                    <td colspan="3">
+                        <form asp-action="SaveResult" method="post" class="d-flex gap-2">
+                            <input type="hidden" name="enrolmentId" value="@row.Enrolment.EnrolmentID"/>
+                            <input type="hidden" name="resultId" value="@row.Result?.ResultID"/>
+                            <input type="hidden" name="eventId" value="@ViewBag.EventId"/>
+                            <input name="finishTime" type="time" step="1" value="@row.Result?.FinishTime?.ToString()" class="form-control form-control-sm"/>
+                            <input name="position" type="number" min="1" value="@row.Result?.Position" placeholder="Position" class="form-control form-control-sm"/>
+                            <input name="status" type="hidden" value="Finished"/>
+                            <button class="btn btn-sm btn-outline-primary">@(row.Result==null?"Capture":"Update")</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
