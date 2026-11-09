@@ -1,0 +1,8 @@
+@model int
+@{ViewData["Title"]="Request unavailable";var title=Model==404?"Page not found":Model==403?"Access denied":"Service unavailable";var msg=Model==404?"The page or event you requested could not be found.":Model==403?"You don't have permission to view this page.":"RaceDay is temporarily unavailable. Please try again.";}
+<div class="empty-state">
+    <div class="display-4">@(Model==404?"404":Model==403?"403":"!")</div>
+    <h1>@title</h1>
+    <p>@msg</p>
+    <a class="btn btn-primary" asp-controller="Home" asp-action="Index">Return to RaceDay</a>
+</div>
