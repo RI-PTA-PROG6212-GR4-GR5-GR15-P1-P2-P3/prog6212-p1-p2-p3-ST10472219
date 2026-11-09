@@ -1,0 +1,44 @@
+@model IReadOnlyList<EventDto>
+@{ViewData["Title"]="Manage events";}
+<div class="section-head">
+    <div>
+        <span class="eyebrow">ORGANISER WORKSPACE</span>
+        <h1>Manage events</h1>
+    </div>
+    <a class="btn btn-primary" asp-action="Create">+ Create event</a>
+</div>
+@if(ViewBag.Error!=null){
+    <div class="alert alert-warning">@ViewBag.Error</div>
+}
+<div class="table-responsive">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Event</th>
+                <th>Type</th>
+                <th>Date</th>
+                <th>Location</th>
+                <th>Categories</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var e in Model){
+                <tr>
+                    <td class="fw-semibold">@e.EventName</td>
+                    <td>@e.EventType</td>
+                    <td>@e.EventDate.ToString("dd MMM yyyy")</td>
+                    <td>@e.Location</td>
+                    <td>@e.CategoryCount</td>
+                    <td class="text-nowrap">
+                        <a asp-action="Edit" asp-route-id="@e.EventID">Edit</a> · <a asp-action="Categories" asp-route-id="@e.EventID">Categories</a> · <a asp-action="Enrolments" asp-route-id="@e.EventID">Entries</a> · <a asp-action="Results" asp-route-id="@e.EventID">Results</a>
+                        <form asp-action="Delete" method="post" class="d-inline">
+                            <input type="hidden" name="id" value="@e.EventID"/>
+                            <button class="btn btn-link text-danger p-0" onclick="return confirm('Delete this event?')">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

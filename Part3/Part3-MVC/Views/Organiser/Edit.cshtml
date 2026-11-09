@@ -1,0 +1,8 @@
+@model EventVm
+@{ViewData["Title"]="Edit event";}
+<h1>Edit event</h1>
+<form method="post" enctype="multipart/form-data">@Html.AntiForgeryToken()
+    <partial name="_EventForm" model="Model"/>
+    <button class="btn btn-primary">Save changes</button>
+    <a asp-action="Events" class="btn btn-outline-secondary">Cancel</a>
+</form>

@@ -1,0 +1,9 @@
+@model EventVm
+@{ViewData["Title"]="Create event";}
+<h1>Create an event</h1>
+<p class="text-muted">Add the event details first. You can add distance and age categories next.</p>
+<form method="post" enctype="multipart/form-data">@Html.AntiForgeryToken()
+    <partial name="_EventForm" model="Model"/>
+    <button class="btn btn-primary">Create event</button>
+    <a asp-action="Events" class="btn btn-outline-secondary">Cancel</a>
+</form>
