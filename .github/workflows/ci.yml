@@ -41,3 +41,42 @@ jobs:
 
       - name: Build MVC Docker image
         run: docker build -f Part3/Part3-MVC/Dockerfile -t raceday-mvc .
+
+      # Same steps as the README: copy .env, then docker compose up (SQL Server, Azurite, API and MVC).
+      - name: Run the app with Docker compose
+        working-directory: Part3
+        run: |
+          cp .env.example .env
+          docker compose up -d --build
+          for i in $(seq 1 60); do
+            if curl -fs http://localhost:8081/api/events > /dev/null && curl -fs http://localhost:8080/ > /dev/null; then
+              echo "API and MVC are running"; break
+            fi
+            sleep 5
+          done
+          docker compose ps
+
+      - name: Check the running containers
+        run: |
+          curl -fs http://localhost:8081/api/events > /dev/null
+          curl -fs http://localhost:8080/ | grep -q "RaceDay"
+          curl -fs -c jar.txt -H "Content-Type: application/json" \
+            -d '{"fullName":"CI Check","email":"ci.check@example.com","password":"CiCheck2026!"}' \
+            http://localhost:8081/api/auth/register/participant > /dev/null
+          curl -fs -c jar.txt -b jar.txt -H "Content-Type: application/json" \
+            -d '{"email":"ci.check@example.com","password":"CiCheck2026!"}' http://localhost:8081/api/auth/login > /dev/null
+          echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" | base64 -d > pic.png
+          curl -fs -b jar.txt -F "file=@pic.png;type=image/png" http://localhost:8081/api/profile/picture > /dev/null
+          curl -fs -b jar.txt -o back.png http://localhost:8081/api/profile/picture
+          cmp pic.png back.png
+          echo "Database, blob storage (Azurite), API and MVC all work in Docker"
+
+      - name: Show container logs if something failed
+        if: failure()
+        working-directory: Part3
+        run: docker compose logs
+
+      - name: Stop the containers
+        if: always()
+        working-directory: Part3
+        run: docker compose down -v

@@ -84,7 +84,9 @@ BlobStorage__ConnectionString="DefaultEndpointsProtocol=https;AccountName=...;Ac
 
 `dotnet test RaceDay-Full.sln` (inside your repo) runs the API tests and the MVC tests; `RaceDay-Part3.sln` opens just the MVC app and its tests (view-model validation, role filter, API client
 cookie/error handling, "47th out of 312" formatting). GitHub Actions (`.github/workflows/ci.yml`) builds, runs all
-tests and builds both Docker images on every push.
+tests and builds both Docker images on every push. It then runs the app the same way as above
+(`docker compose up --build` with SQL Server, Azurite, the API and the MVC app) and checks that the API answers, the
+MVC home page loads and a picture can be uploaded to blob storage and read back.
 
 ## Repository layout
 
