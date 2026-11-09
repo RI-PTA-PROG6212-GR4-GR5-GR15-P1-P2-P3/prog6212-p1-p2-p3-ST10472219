@@ -50,7 +50,7 @@ public class CategoriesController : ApiControllerBase
     /// <summary>Adds a category to an event the Organiser owns.</summary>
     /// <remarks>
     /// **Role required:** Organiser (owner only).
-    /// **Expects:** `{ categoryName, distanceKm (&gt; 0), entryFee (&gt;= 0), maxParticipants (&gt;= 1) }`.
+    /// **Expects:** `{ categoryName, categoryType (Distance|Age), distanceKm (&gt; 0), entryFee (&gt;= 0), maxParticipants (&gt;= 1), minimumAge/maximumAge (Age categories only) }`.
     /// **Returns:** 201 new category; 400 invalid data; 401 not logged in; 403 not the owning Organiser; 404 event not found.
     /// </remarks>
     [HttpPost("api/events/{eventId:int}/categories")]
@@ -66,26 +66,28 @@ public class CategoriesController : ApiControllerBase
         if (ev is null) return NotFoundError("Event not found.");
         if (ev.OrganiserID != CurrentUserId) return ForbiddenError("You can only modify your own events.");
 
+        if (!ValidateCategory(request, out var categoryError)) return BadRequestError(categoryError!);
         var category = new Category
         {
             EventID = eventId,
             CategoryName = request.CategoryName.Trim(),
             DistanceKm = request.DistanceKm,
+            CategoryType = NormaliseType(request.CategoryType),
+            MinimumAge = IsAge(request.CategoryType) ? request.MinimumAge : null,
+            MaximumAge = IsAge(request.CategoryType) ? request.MaximumAge : null,
             EntryFee = request.EntryFee,
             MaxParticipants = request.MaxParticipants
         };
         _db.Categories.Add(category);
         await _db.SaveChangesAsync();
 
-        return StatusCode(StatusCodes.Status201Created,
-            new CategoryDto(category.CategoryID, category.EventID, category.CategoryName,
-                category.DistanceKm, category.EntryFee, category.MaxParticipants, 0));
+        return StatusCode(StatusCodes.Status201Created, Mappers.ToCategory(category));
     }
 
     /// <summary>Updates a category on an event the Organiser owns.</summary>
     /// <remarks>
     /// **Role required:** Organiser (owner only).
-    /// **Expects:** `{ categoryName, distanceKm, entryFee, maxParticipants }`.
+    /// **Expects:** `{ categoryName, categoryType, distanceKm, entryFee, maxParticipants, minimumAge, maximumAge }`.
     /// **Returns:** 200 updated category; 400 invalid data; 401 not logged in; 403 not the owning Organiser; 404 not found;
     /// 409 if maxParticipants is lower than the current number of enrolments.
     /// </remarks>
@@ -106,17 +108,48 @@ public class CategoriesController : ApiControllerBase
         if (category is null) return NotFoundError("Category not found.");
         if (category.Event.OrganiserID != CurrentUserId) return ForbiddenError("You can only modify your own events.");
 
+        if (!ValidateCategory(request, out var categoryError)) return BadRequestError(categoryError!);
         var enrolled = category.Enrolments.Count(en => en.Status != EnrolmentStatuses.Cancelled);
         if (request.MaxParticipants < enrolled)
             return ConflictError($"maxParticipants cannot be lower than the {enrolled} current enrolment(s).");
 
         category.CategoryName = request.CategoryName.Trim();
         category.DistanceKm = request.DistanceKm;
+        category.CategoryType = NormaliseType(request.CategoryType);
+        category.MinimumAge = IsAge(request.CategoryType) ? request.MinimumAge : null;
+        category.MaximumAge = IsAge(request.CategoryType) ? request.MaximumAge : null;
         category.EntryFee = request.EntryFee;
         category.MaxParticipants = request.MaxParticipants;
         await _db.SaveChangesAsync();
 
         return Ok(Mappers.ToCategory(category));
+    }
+
+    private static bool IsAge(string? type) => string.Equals(type, CategoryTypes.Age, StringComparison.OrdinalIgnoreCase);
+
+    private static string NormaliseType(string? type) => IsAge(type) ? CategoryTypes.Age : CategoryTypes.Distance;
+
+    /// <summary>A category is either a distance category or an age category (which needs a valid age range).</summary>
+    private static bool ValidateCategory(CategoryRequest request, out string? error)
+    {
+        error = null;
+
+        var isDistance = string.Equals(request.CategoryType, CategoryTypes.Distance, StringComparison.OrdinalIgnoreCase);
+        if (!isDistance && !IsAge(request.CategoryType))
+        {
+            error = "Category type must be Distance or Age.";
+            return false;
+        }
+
+        if (IsAge(request.CategoryType) &&
+            (request.MinimumAge is null || request.MaximumAge is null || request.MinimumAge < 0 ||
+             request.MaximumAge > 120 || request.MinimumAge > request.MaximumAge))
+        {
+            error = "Age categories require a valid minimum and maximum age between 0 and 120.";
+            return false;
+        }
+
+        return true;
     }
 
     /// <summary>Deletes a category from an event the Organiser owns.</summary>
