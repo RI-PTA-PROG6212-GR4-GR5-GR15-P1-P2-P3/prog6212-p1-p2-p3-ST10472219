@@ -3,8 +3,9 @@
 PROG6212 POE Part 3. An MVC web app that consumes the Part 2 RESTful API. Organisers manage events, categories,
 enrolments and results; Participants browse, enrol and view their race history.
 
-- **Demo video (unlisted YouTube):** `PASTE LINK HERE`
-- **Green CI build:** `INSERT SCREENSHOT HERE` (e.g. `![CI](docs/CI-Part3-Green.png)`)
+
+- **Green CI build:** `<img width="1365" height="716" alt="WhatsApp Image 2026-11-09 at 19 40 11" src="https://github.com/user-attachments/assets/e48f9984-8ad2-4507-9a30-f3f0b369822d" />
+` 
 
 ## Architecture
 
