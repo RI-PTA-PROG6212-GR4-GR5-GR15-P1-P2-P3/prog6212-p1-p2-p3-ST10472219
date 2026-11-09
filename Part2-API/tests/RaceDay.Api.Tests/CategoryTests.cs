@@ -28,6 +28,32 @@ public class CategoryTests
     }
 
     [Fact]
+    public async Task Create_AgeCategory_PersistsAgeRange()
+    {
+        using var db = NewDb();
+        var organiser = AddOrganiser(db);
+        var ev = AddEvent(db, organiser);
+        var request = new CategoryRequest { CategoryName = "Women 40-49", CategoryType = "Age", MinimumAge = 40, MaximumAge = 49, DistanceKm = 10m, EntryFee = 100m, MaxParticipants = 100 };
+        var controller = new CategoriesController(db).WithSession(organiser.OrganiserID, Roles.Organiser);
+        var result = await controller.Create(ev.EventID, request);
+        Assert.Equal(201, Status(result));
+        Assert.Equal("Age", db.Categories.Single().CategoryType);
+        Assert.Equal(40, db.Categories.Single().MinimumAge);
+        Assert.Equal(49, db.Categories.Single().MaximumAge);
+    }
+
+    [Fact]
+    public async Task Create_AgeCategory_RequiresValidAgeRange()
+    {
+        using var db = NewDb();
+        var organiser = AddOrganiser(db);
+        var ev = AddEvent(db, organiser);
+        var request = new CategoryRequest { CategoryName = "Invalid age group", CategoryType = "Age", MinimumAge = 55, MaximumAge = 40, DistanceKm = 5m, EntryFee = 0m, MaxParticipants = 100 };
+        var controller = new CategoriesController(db).WithSession(organiser.OrganiserID, Roles.Organiser);
+        Assert.Equal(400, Status(await controller.Create(ev.EventID, request)));
+    }
+
+    [Fact]
     public async Task Create_OnAnotherOrganisersEvent_Returns403()
     {
         using var db = NewDb();

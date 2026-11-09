@@ -193,4 +193,65 @@ public class ResultTests
         Assert.Equal(new[] { 1, 2 }, Body<List<ResultDto>>(result).Select(r => r.Position!.Value).ToArray());
         Assert.Equal(404, Status(await controller.GetForEvent(999)));
     }
+
+    [Fact]
+    public async Task GetForEvent_UnpublishedResults_AreHiddenFromEveryoneExceptTheOwner()
+    {
+        using var db = NewDb();
+        var organiser = AddOrganiser(db);
+        var ev = AddEvent(db, organiser, daysFromNow: -2);
+        ev.ResultsPublished = false;
+        var enrolment = AddEnrolment(db, AddParticipant(db), AddCategory(db, ev));
+        AddResult(db, enrolment);
+        await db.SaveChangesAsync();
+
+        var visitor = new ResultsController(db).WithSession();
+        Assert.Empty(Body<List<ResultDto>>(await visitor.GetForEvent(ev.EventID)));
+
+        var owner = new ResultsController(db).WithSession(organiser.OrganiserID, Roles.Organiser);
+        Assert.Single(Body<List<ResultDto>>(await owner.GetForEvent(ev.EventID)));
+    }
+
+    [Fact]
+    public async Task Publish_RequiresAllActiveEnrolmentsToHaveResults()
+    {
+        using var db = NewDb();
+        var organiser = AddOrganiser(db);
+        var ev = AddEvent(db, organiser, daysFromNow: -2);
+        ev.ResultsPublished = false;
+        var category = AddCategory(db, ev);
+        AddEnrolment(db, AddParticipant(db), category);
+        var controller = new ResultsController(db).WithSession(organiser.OrganiserID, Roles.Organiser);
+        Assert.Equal(400, Status(await controller.Publish(ev.EventID)));
+        Assert.False(ev.ResultsPublished);
+    }
+
+    [Fact]
+    public async Task Publish_OwnerPublishesAfterAllResultsAreCaptured()
+    {
+        using var db = NewDb();
+        var organiser = AddOrganiser(db);
+        var ev = AddEvent(db, organiser, daysFromNow: -2);
+        ev.ResultsPublished = false;
+        var category = AddCategory(db, ev);
+        var enrolment = AddEnrolment(db, AddParticipant(db), category);
+        AddResult(db, enrolment);
+        var controller = new ResultsController(db).WithSession(organiser.OrganiserID, Roles.Organiser);
+        Assert.Equal(204, Status(await controller.Publish(ev.EventID)));
+        Assert.True(ev.ResultsPublished);
+    }
+
+
+    [Fact]
+    public async Task Capture_FinishedResult_RequiresFinishingPosition()
+    {
+        using var db = NewDb();
+        var organiser = AddOrganiser(db);
+        var ev = AddEvent(db, organiser);
+        var enrolment = AddEnrolment(db, AddParticipant(db), AddCategory(db, ev));
+        var controller = new ResultsController(db).WithSession(organiser.OrganiserID, Roles.Organiser);
+        var result = await controller.Capture(enrolment.EnrolmentID, new ResultRequest { FinishTime = TimeSpan.FromMinutes(32), Position = null, Status = "Finished" });
+        Assert.Equal(400, Status(result));
+    }
+
 }
