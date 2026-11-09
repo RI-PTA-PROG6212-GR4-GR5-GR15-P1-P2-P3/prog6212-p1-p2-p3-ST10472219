@@ -1,12 +1,11 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using RaceDay.Api;
 using RaceDay.Api.Data;
 using RaceDay.Api.Models;
 using RaceDay.Api.Services;
-
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 namespace RaceDay.Api.Tests;
 
 /// <summary>Minimal in-memory ISession so controllers can be tested without a web host.</summary>
@@ -84,7 +83,8 @@ public static class TestHelpers
             Location = "Pretoria",
             Description = "Test event",
             EventType = EventTypes.Running,
-            Status = status
+            Status = status,
+            ResultsPublished = true
         };
         db.Events.Add(e);
         db.SaveChanges();

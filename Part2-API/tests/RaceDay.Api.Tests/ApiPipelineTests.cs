@@ -128,11 +128,44 @@ public class ApiPipelineTests : IDisposable
             new { finishTime = "00:41:30", position = 3, status = "Finished" });
         Assert.Equal(HttpStatusCode.Created, capture.StatusCode);
 
-        // The participant now sees the result in their own history.
-        var results = await runner.GetFromJsonAsync<JsonElement>("/api/results/my");
-        var result = Assert.Single(results.EnumerateArray());
+        // The owning organiser can see the captured result straight away...
+        var captured = await organiser.GetFromJsonAsync<JsonElement>($"/api/events/{eventId}/results");
+        var result = Assert.Single(captured.EnumerateArray());
         Assert.Equal("00:41:30", result.GetProperty("finishTime").GetString());
         Assert.Equal(3, result.GetProperty("position").GetInt32());
+
+        // ...but the participant's history stays empty until the results are published (the event is in the future).
+        var mine = await runner.GetFromJsonAsync<JsonElement>("/api/results/my");
+        Assert.Empty(mine.EnumerateArray());
+        var publish = await organiser.PostAsync($"/api/events/{eventId}/results/publish", null);
+        Assert.Equal(HttpStatusCode.BadRequest, publish.StatusCode);
+    }
+
+    [Fact]
+    public async Task PublishedSeedResults_AreVisibleToTheParticipantWithFinisherCount()
+    {
+        var sipho = _factory.CreateClient();
+        await LoginAsync(sipho, Participant);
+
+        var mine = await sipho.GetFromJsonAsync<JsonElement>("/api/results/my");
+
+        var result = Assert.Single(mine.EnumerateArray());
+        Assert.Equal("Pretoria Spring Fun Run", result.GetProperty("eventName").GetString());
+        Assert.Equal(1, result.GetProperty("position").GetInt32());
+        Assert.Equal(1, result.GetProperty("totalFinishers").GetInt32());
+    }
+
+    [Fact]
+    public async Task Dashboard_ShowsTheOrganisersOwnEventsAndEnrolmentTotals()
+    {
+        var organiser = _factory.CreateClient();
+        await LoginAsync(organiser, Organiser);
+
+        var dashboard = await organiser.GetFromJsonAsync<JsonElement>("/api/dashboard/organiser");
+
+        Assert.True(dashboard.GetProperty("eventsCreated").GetInt32() >= 1);
+        Assert.True(dashboard.GetProperty("totalEnrolments").GetInt32() >= 1);
+        Assert.NotEmpty(dashboard.GetProperty("events").EnumerateArray());
     }
 
     [Fact]
@@ -143,7 +176,7 @@ public class ApiPipelineTests : IDisposable
         var swagger = await client.GetFromJsonAsync<JsonElement>("/swagger/v1/swagger.json");
 
         var operations = swagger.GetProperty("paths").EnumerateObject().Sum(path => path.Value.EnumerateObject().Count());
-        Assert.Equal(24, operations);
+        Assert.Equal(30, operations);
     }
 
     private static Task<HttpResponseMessage> LoginAsync(HttpClient client, string email) =>
