@@ -66,6 +66,9 @@ dotnet run --project ../Part2-API/src/RaceDay.Api --urls http://localhost:5080
 Api__BaseUrl=http://localhost:5080/ dotnet run --project Part3-MVC --urls http://localhost:5000
 ```
 
+No SQL Server on the machine? Add `Database__UseInMemory=true` in front of the API command. The data then lives in
+memory and is lost when the API stops.
+
 For image uploads start Azurite (`docker run -p 10000:10000 mcr.microsoft.com/azure-storage/azurite azurite-blob --blobHost 0.0.0.0`).
 
 ## Azure Blob Storage configuration (API only)

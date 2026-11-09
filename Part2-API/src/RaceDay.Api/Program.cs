@@ -8,8 +8,14 @@ using RaceDay.Api.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // ---- Database (EF Core, SQL Server, code-first) ----
+// Set Database:UseInMemory=true to run without SQL Server (quick local run, data is lost when the API stops).
 builder.Services.AddDbContext<RaceDayDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("RaceDayDb")));
+{
+    if (builder.Configuration.GetValue<bool>("Database:UseInMemory"))
+        options.UseInMemoryDatabase("RaceDayDB");
+    else
+        options.UseSqlServer(builder.Configuration.GetConnectionString("RaceDayDb"));
+});
 
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
