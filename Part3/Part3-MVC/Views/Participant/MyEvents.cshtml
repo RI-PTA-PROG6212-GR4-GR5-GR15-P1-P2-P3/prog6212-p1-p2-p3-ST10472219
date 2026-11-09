@@ -1,0 +1,38 @@
+@model IReadOnlyList<EnrolmentDto>
+@{ViewData["Title"]="My events";}
+<h1>My enrolled events</h1>
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Event</th>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Bib</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var e in Model){
+                <tr>
+                    <td>@e.EventName</td>
+                    <td>@e.EventDate.ToString("dd MMM yyyy")</td>
+                    <td>@e.CategoryName</td>
+                    <td>@e.BibNumber</td>
+                    <td>
+                        <span class="status-pill status-@e.Status.ToLowerInvariant()">@e.Status</span>
+                    </td>
+                    <td>
+                        @if(e.Status!="Cancelled"&&e.EventDate>DateTime.UtcNow){
+                            <form asp-action="CancelEnrolment" method="post" onsubmit="return confirm('Cancel this enrolment?');">
+                                <input type="hidden" name="enrolmentId" value="@e.EnrolmentID"/>
+                                <button class="btn btn-sm btn-outline-danger">Cancel</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

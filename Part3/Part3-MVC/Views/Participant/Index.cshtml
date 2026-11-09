@@ -1,0 +1,38 @@
+@model IReadOnlyList<EventDto>
+@{ViewData["Title"]="Participant home";}
+<span class="eyebrow">PARTICIPANT SPACE</span>
+<h1>Find your next event</h1>
+<p class="text-muted">Choose a challenge, select your category and get moving.</p>
+<form class="filter-bar mb-4" method="get">
+    <input class="form-control" name="q" value="@ViewBag.Query" placeholder="Search event or location"/>
+    <select class="form-select" name="type">
+        <option value="">All event types</option>
+        @foreach(var t in new[]{"Running","Cycling","Walking"}){
+            <option selected="@(ViewBag.Type==t)" value="@t">@t</option>
+        }
+    </select>
+    <button class="btn btn-primary">Filter</button>
+</form>
+@if(ViewBag.Error!=null){
+    <div class="alert alert-warning">@ViewBag.Error</div>
+}
+<div class="row g-4">
+    @foreach(var e in Model){
+        <div class="col-md-6 col-xl-4">
+            <article class="event-card h-100">
+                @if(e.BannerImageUrl!=null){
+                    <img src="/Media/EventBanner/@e.EventID" class="event-banner" alt="Event banner"/>
+                }else{
+                    <div class="event-placeholder">@e.EventType</div>
+                }
+                <div class="p-4">
+                    <span class="event-type">@e.EventType</span>
+                    <h3>@e.EventName</h3>
+                    <p>📍 @e.Location</p>
+                    <p>📅 @e.EventDate.ToString("dd MMM yyyy")</p>
+                    <a class="btn btn-primary" asp-action="Details" asp-route-id="@e.EventID">Explore event</a>
+                </div>
+            </article>
+        </div>
+    }
+</div>

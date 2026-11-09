@@ -1,0 +1,28 @@
+@model IReadOnlyList<ResultDto>
+@{ViewData["Title"]="My results";}
+<h1>My results</h1>
+<p class="text-muted">Your published race history.</p>
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Event</th>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Finish time</th>
+                <th>Position</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var r in Model){
+                <tr>
+                    <td>@r.EventName</td>
+                    <td>@r.EventDate.ToString("dd MMM yyyy")</td>
+                    <td>@r.CategoryName</td>
+                    <td>@(r.FinishTime?.ToString()??r.Status)</td>
+                    <td>@DisplayFormatting.FinishingPosition(r.Position,r.TotalFinishers)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

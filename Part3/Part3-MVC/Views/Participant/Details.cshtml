@@ -1,0 +1,36 @@
+@model EventDetailDto
+@{ViewData["Title"]=Model.EventName;}
+@if(Model.BannerImageUrl!=null){
+    <img src="/Media/EventBanner/@Model.EventID" class="detail-banner" alt="@Model.EventName banner"/>
+}
+<span class="eyebrow">@Model.EventType</span>
+<h1>@Model.EventName</h1>
+<p class="lead">@Model.Description</p>
+<p>📍 @Model.Location · 📅 @Model.EventDate.ToString("dd MMM yyyy · HH:mm")</p>
+<h2 class="h4 mt-4">Choose your category</h2>
+<div class="row g-3">
+    @foreach(var c in Model.Categories){
+        <div class="col-md-6">
+            <div class="form-panel h-100">
+                <h3 class="h5">@c.CategoryName</h3>
+                <p>@c.DistanceKm km · R @c.EntryFee.ToString("N2")</p>
+                @if(c.CategoryType=="Age"){
+                    <p>Age @c.MinimumAge–@c.MaximumAge</p>
+                }
+                <p>@(c.MaxParticipants-c.EnrolledCount) places remaining</p>
+                @{var enrolled=((Dictionary<int,int>)ViewBag.Enrolled).ContainsKey(c.CategoryID);var open=Model.Status=="Scheduled"&&Model.EventDate>DateTime.UtcNow;}
+                @if(enrolled){
+                    <span class="status-pill status-confirmed">You are enrolled</span>
+                }else if(!open){
+                    <span class="text-muted">Enrolment is closed</span>
+                }else{
+                    <form asp-action="Enrol" method="post">
+                        <input type="hidden" name="id" value="@Model.EventID"/>
+                        <input type="hidden" name="categoryId" value="@c.CategoryID"/>
+                        <button class="btn btn-primary" disabled="@(c.EnrolledCount>=c.MaxParticipants)">@(c.EnrolledCount>=c.MaxParticipants?"Category full":"Enrol in this category")</button>
+                    </form>
+                }
+            </div>
+        </div>
+    }
+</div>
